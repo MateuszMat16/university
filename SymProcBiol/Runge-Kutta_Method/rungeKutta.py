@@ -18,10 +18,10 @@ k3 = 1.5e5
 
 init_parameters = {
     "p53" : 100,
-    "NDMm" : 150,
-    "NDMst" : 200,
+    "NDMm" : 100,
+    "NDMst" : 100,
     "PTEN" : 100,
-    "hop" : 20
+    "hop" : 100,
 }
 
 def calculate_dev_p53(p53_initial_value, NDMm_value):
