@@ -1,11 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-    
+
 def calculate_dev_p53(p53_initial_value, NDMm_value, parameters):
+    
     d1 = parameters["d1"]
     p1 = parameters["p1"]
-    
     second_part = d1 * p53_initial_value * NDMm_value
 
     return p1 - second_part
@@ -18,9 +18,14 @@ def calculate_dev_NDMst(p53_value, PTEN_value, NDMst_initial_value, parameters):
     d2 = parameters["d2"]
     
     first_part = p2 * (p53_value**4 / (p53_value**4 + pow(k2, 4)))
+    print("!!!!!!! up value: ", p53_value**4)
+    print("!!!!!!! down walue: ", (p53_value**4 + pow(k2, 4)))
     second_part = k1 * (pow(k3, 2) /(pow(k3, 2) + pow(PTEN_value, 2))) * NDMst_initial_value
     third_pard = d2 * NDMst_initial_value
-
+    print("HERE!!!!! first part: ", first_part)
+    print("HERE!!!!! second part: ", second_part)
+    print("HERE!!!!! third part: ", third_pard)
+    print("Result: ", first_part - second_part - third_pard)
     return first_part - second_part - third_pard
 
 def calculate_dev_NDMm(NDMst_value, PTEN_value, NDMm_initial_value, parameters):
@@ -54,7 +59,7 @@ def A_value_update(h_value, A_initial_value, kx_value, k_nnumber):
     return A_initial_value + (h_value * kx_value)
 
 def hop_result_p53(p53, NDMm, hop, parameters):
-
+    print("&&&& p53 value: ", p53)
     print("Calculating P53 Value after the hop = ", hop)
     k1 = calculate_dev_p53(p53, NDMm, parameters)
     print("k1: ", k1)
@@ -132,8 +137,7 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
     NDMst_array = np.array([NDMst])
     PTEN_array = np.array([PTEN])
 
-    for i in range(time):
-        i += hop
+    for i in range(hop, time, hop):
 
         p53 = hop_result_p53(p53, NDMm, hop, parameters)
         p53_array = np.append(p53_array, p53)
@@ -147,24 +151,12 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
         PTEN = hop_result_PTEN(p53, PTEN, hop, parameters)
         PTEN_array = np.append(PTEN_array, PTEN)
 
-    
-    # print("P53: ", p53_array)
-    # print("NDMm: ", NDMm_array)
-    # print("NDMst: ", NDMst_array)
-    # print("PTEN: ", PTEN_array)
+
     return p53_array, NDMm_array, NDMst_array, PTEN_array
 
-# p53_array, NDMm_array, NDMst_array, PTEN_array = calculate_symulation(100, 100, 100, 100, 100, 17800)
-# plt.plot(p53_array)
-# plt.plot(NDMm_array)
-# plt.plot(NDMst_array)
-# plt.plot(PTEN_array)
-# plt.ylabel("P53 value")
-# plt.xlabel("Time")
-# plt.show()
 
 
-def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=100, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
+def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
 
     # utworzenie słownika (HashMap) dla każdego z parametrów
     parameters = {"p1": 8.8,
@@ -195,23 +187,29 @@ def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=100, time=17280, PTEN_
 
     # Wywołanie głównej funkcji wykonującej całą symulację
     # przekazanie wszytkich danych wejściowych białek oraz parametrów
-    p53_array, NDMm_array, NDMst_array, PTEN_array = calculate_symulation(p53=p53, 
-                                                                          NDMm=NDMm, 
-                                                                          NDMst=NDMst, 
-                                                                          PTEN=PTEN, 
-                                                                          hop=hop, 
-                                                                          time=time,
-                                                                          parameters=parameters)
-    
+    p53_array, NDMm_array, NDMst_array, PTEN_array = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
+                                                                          hop=hop, time=time, parameters=parameters)
+    time = np.array([x for x in range(0, time, hop)])
+
     # rysowanie funkcji ilości białek w czasie
-    plt.plot(p53_array)
-    plt.plot(NDMm_array)
-    plt.plot(NDMst_array)
-    plt.plot(PTEN_array)
+    plt.plot(p53_array, label="p53", color="#0033cc")
+    plt.plot(NDMm_array, label="NDMm", color="#ffff00")
+    plt.plot(NDMst_array, label="NDMst", color="#003300")
+    plt.plot(PTEN_array, label="PTEN", color="#cc6699")
     plt.ylabel("P53 value")
     plt.xlabel("Time")
+    plt.legend(loc="upper left")
     plt.show()
+
+    with open("./university/SymProcBiol/Runge-Kutta_Method/result.txt", "w") as file:
+        line = "p53 \t NDMm \t NDMst \t PTEN \n"
+        file.write(line)
+        for i in range(len(PTEN_array)):
+            line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\n")
+            file.write(line)
+                       
+
 
 
 # wywołanie funkcji
-RK_method(DNA_damage=True)
+RK_method(hop=10, time=17280, DNA_damage=True, PTEN_off=True, is_siRNA=True)
