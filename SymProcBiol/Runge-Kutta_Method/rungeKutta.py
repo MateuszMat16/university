@@ -333,7 +333,8 @@ def calculate_hop_length(max_percent_change, hop, p53, NDMm, NDMst, PTEN, parame
     return hop_lengh
 
 
-
+# Druga główna metoda
+# Ta sama implementacja, jedynie z zmiennym krokiem.
 def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
 
     # utworzenie słownika (HashMap) dla każdego z parametrów
@@ -414,6 +415,7 @@ def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTE
             file.write(line)
   
 
+# domyśle wartości zmiennych
 p53=100
 NDMm=100
 NDMst=100
@@ -425,6 +427,7 @@ PTEN_off=False
 is_siRNA=False
 DNA_damage=False
 
+# wczytywanie zmiennych z pliku
 with open("./input.txt", "r") as input:
     inputs= {}
     print("starting!")
@@ -469,9 +472,13 @@ with open("./input.txt", "r") as input:
     if inputs["DNA_damage"] == "1":
         DNA_damage = True
 
+# wybór zmiennego lub stałego kroku
 if hop_state:
     RK_method_V2(p53, NDMm, NDMst, PTEN, hop, time, PTEN_off, is_siRNA, DNA_damage)
 
 else:
     RK_method(p53, NDMm, NDMst, PTEN, hop, time, PTEN_off, is_siRNA, DNA_damage)
     print("here")
+
+
+    

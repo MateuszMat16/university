@@ -15,13 +15,13 @@ hop=10
 hop_state=1
 
 # Czas w sekundach symulacji
-time=17280
+time=172800
 
 # Czy PTEN ma być wyłączone, 0 - nie, 1 - tak
-PTEN_off=0
+PTEN_off=1
 
 # Czy siRNA ma być obecne, 0 - nie, 1 - tak
-is_siRNA=0
+is_siRNA=1
     
 # Czy istnieją uszkodzenia DNA, 0 - nie, 1 - tak
-DNA_damage=0
+DNA_damage=1
