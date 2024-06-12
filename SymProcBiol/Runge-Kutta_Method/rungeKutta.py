@@ -252,7 +252,7 @@ def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_o
     plt.close()
 
     # Zapis wyników do pliku
-    with open("./university/SymProcBiol/Runge-Kutta_Method/result.txt", "w") as file:
+    with open("result.txt", "w") as file:
         line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
         file.write(line)
         for i in range(len(PTEN_array)):
@@ -406,7 +406,7 @@ def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTE
     plt.close()
 
      # Zapis wyników do pliku
-    with open("./university/SymProcBiol/Runge-Kutta_Method/result_changing_step.txt", "w") as file:
+    with open("result_changing_step.txt", "w") as file:
         line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
         file.write(line)
         for i in range(len(PTEN_array)):
@@ -414,7 +414,63 @@ def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTE
             file.write(line)
   
 
+p53=100
+NDMm=100
+NDMst=100
+PTEN=100
+hop=10
+hop_state=False
+time=17280
+PTEN_off=False
+is_siRNA=False
+DNA_damage=False
 
-# wywołanie funkcji
-RK_method(hop=10, time=172800)
-RK_method_V2(hop=10, time=172800)
+with open("./input.txt", "r") as input:
+    inputs= {}
+    print("starting!")
+    lines = input.readlines()
+    for line in lines:
+        if line.startswith("#"):
+            continue
+        if line.strip() == '':
+            continue
+        
+        tmp = line.split("=")
+        inputs[tmp[0]] = tmp[1].strip()
+    
+
+    if inputs["p53"] != p53:
+        p53 = float(inputs["p53"])
+    
+    if inputs["NDMm"] != NDMm:
+        NDMm = float(inputs["NDMm"])
+
+    if inputs["NDMst"] != NDMst:
+        NDMst = float(inputs["NDMst"])
+
+    if inputs["PTEN"] != PTEN:
+        PTEN = float(inputs["PTEN"])
+
+    if inputs["hop"] != hop:
+        hop = int(inputs["hop"])
+
+    if inputs["time"] != time:
+        time = int(inputs["time"])
+
+    if inputs["hop_state"] == 1:
+        hop_state = True
+    
+    if inputs["PTEN_off"] == 1:
+        PTEN_off = True
+
+    if inputs["is_siRNA"] == 1:
+        is_siRNA = True    
+    
+    if inputs["DNA_damage"] == 1:
+        DNA_damage = True
+
+if hop_state:
+    RK_method_V2(p53, NDMm, NDMst, PTEN, hop, time, PTEN_off, is_siRNA, DNA_damage)
+
+else:
+    RK_method(p53, NDMm, NDMst, PTEN, hop, time, PTEN_off, is_siRNA, DNA_damage)

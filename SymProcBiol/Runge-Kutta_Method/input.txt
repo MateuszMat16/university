@@ -1,0 +1,27 @@
+# Witam w pliku wejściowym
+# tutaj definiowane są wartości początkowe do symulacji
+# W celu zmiany wartości należy zmienić liczbę przy parametrze
+
+# Ilości poszczególnych białek
+p53=100
+NDMm=100
+NDMst=100
+PTEN=100
+
+# Domyślna długość skoku 
+hop=10
+
+# Czy skok ma być zmienny, 0 - stały, 1 - zmienny
+hop_state=0
+
+# Czas w sekundach symulacji
+time=17280
+
+# Czy PTEN ma być wyłączone, 0 - nie, 1 - tak
+PTEN_off=0
+
+# Czy siRNA ma być obecne, 0 - nie, 1 - tak
+is_siRNA=0
+    
+# Czy istnieją uszkodzenia DNA, 0 - nie, 1 - tak
+DNA_damage=0
