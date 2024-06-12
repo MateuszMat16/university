@@ -257,9 +257,97 @@ def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_o
         for i in range(len(PTEN_array)):
             line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\n")
             file.write(line)
-                       
 
+
+# funkcja okre                 
+def calculate_hop_length_p53(max_percent_change, hop, p53, NDMm, parameters):
+    after_hop_p53 = hop_result_p53(p53, NDMm, hop, parameters)
+    p53_diff = (abs(after_hop_p53 - p53) * 100) / p53
+    
+    if (p53 != after_hop_p53) and (p53_diff > max_percent_change):
+        
+        if hop/2 >= 0.75:
+            return calculate_hop_length_p53(max_percent_change=max_percent_change, hop=hop/2, p53=p53, NDMm=NDMm, parameters=parameters)
+        else:
+            return hop
+
+    else:
+        return hop
+
+def calculate_hop_length_p53(max_percent_change, hop, p53, NDMm, parameters):
+    after_hop_p53 = hop_result_p53(p53, NDMm, hop, parameters)
+    p53_diff = (abs(after_hop_p53 - p53) * 100) / p53
+    
+    if (p53 != after_hop_p53) and (p53_diff > max_percent_change):
+        
+        if hop/2 >= 0.75:
+            return calculate_hop_length_p53(max_percent_change=max_percent_change, hop=hop/2, p53=p53, NDMm=NDMm, parameters=parameters)
+        else:
+            return hop
+
+    else:
+        return hop
+
+
+
+def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
+
+    # utworzenie słownika (HashMap) dla każdego z parametrów
+    parameters = {"p1": 8.8,
+                  "d1": 1.375e-14,
+                  "d3": 3e-5,
+                  "k1": 1.925e-5,
+                  "k2": 1e5,
+                  "k3": 1.5e5,
+                  }
+
+    # warunek, gdy PTEN ne działa zmienia wartość parametru p3
+    if PTEN_off:
+        print("Parameters: PTEN is off")
+        parameters["p3"] = 0.0
+    else:
+        print("Parameters: PTEN is on")
+        parameters["p3"] = 100
+
+    # warunek na obecność siRNA, zmienia wartość paramteru p2
+    if is_siRNA:
+        print("Parameters: siRNA")
+        parameters["p2"] = 0.02
+    else:
+        print("Parameters: no siRNA")
+        parameters["p2"] = 440
+  
+    # warunek sprawdza czy w mamy uszkodzenia DNA i odpowiednio zmienia wartość parametru d2
+    if DNA_damage:
+        print("Parameters: DNA damage")
+        parameters["d2"] = 1.375e-4
+    else:
+        print("Parameters: no DNA damage")
+        parameters["d2"] = 0.1
+
+    counter = 0
+    p53_array = np.array([p53])
+    p53_time_array = np.array([counter])
+    while counter < time:
+
+        new_hop =  calculate_hop_length_p53(max_percent_change=5, hop=10, p53=p53_array[-1], NDMm=NDMm, parameters=parameters)
+        counter += new_hop
+        p53_time_array = np.append(p53_time_array, counter)
+        p53_array = np.append(p53_array, hop_result_p53(p53_array[-1], NDMm, new_hop, parameters))
+
+
+    print(p53_array)
+    print(p53_time_array)
+    # rysowanie funkcji ilości białek w czasie
+    plt.plot(p53_array, p53_time_array, label="p53", color="#0033cc")
+   
+    plt.ylabel("P53 value")
+    plt.xlabel("Time")
+    plt.legend(loc="upper left")
+    plt.show()
+  
 
 
 # wywołanie funkcji
-RK_method(hop=10, time=17280, DNA_damage=True, PTEN_off=True, is_siRNA=True)
+RK_method(hop=10, time=17280 * 3)
+RK_method_V2(hop=10, time=17280 * 3)
