@@ -457,16 +457,16 @@ with open("./input.txt", "r") as input:
     if inputs["time"] != time:
         time = int(inputs["time"])
 
-    if inputs["hop_state"] == 1:
+    if inputs["hop_state"] == "1":
         hop_state = True
     
-    if inputs["PTEN_off"] == 1:
+    if inputs["PTEN_off"] == "1":
         PTEN_off = True
 
-    if inputs["is_siRNA"] == 1:
+    if inputs["is_siRNA"] == "1":
         is_siRNA = True    
     
-    if inputs["DNA_damage"] == 1:
+    if inputs["DNA_damage"] == "1":
         DNA_damage = True
 
 if hop_state:
@@ -474,3 +474,4 @@ if hop_state:
 
 else:
     RK_method(p53, NDMm, NDMst, PTEN, hop, time, PTEN_off, is_siRNA, DNA_damage)
+    print("here")

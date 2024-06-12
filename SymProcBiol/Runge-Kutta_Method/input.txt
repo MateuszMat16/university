@@ -12,7 +12,7 @@ PTEN=100
 hop=10
 
 # Czy skok ma być zmienny, 0 - stały, 1 - zmienny
-hop_state=0
+hop_state=1
 
 # Czas w sekundach symulacji
 time=17280
