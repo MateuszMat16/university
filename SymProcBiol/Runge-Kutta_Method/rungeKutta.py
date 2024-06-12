@@ -171,7 +171,7 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
 
     # pętla przy stałym skoku
     # zaczynaj od wartości hop do czasu - time, skok o wartość hop
-    for i in range(hop, time, hop):
+    for i in range(hop, time + 1, hop):
 
         # obliczenie wartości p53 po skoku i wpisanie jej do macierzy
         p53 = hop_result_p53(p53, NDMm, hop, parameters)
@@ -238,55 +238,99 @@ def RK_method(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTEN_o
     p53_array, NDMm_array, NDMst_array, PTEN_array = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
                                                                           hop=hop, time=time, parameters=parameters)
     # utworzenie macierzy czasu
-    time = np.array([x for x in range(0, time, hop)])
+    time = np.array([x for x in range(0, time + 1, hop)])
 
     # rysowanie funkcji ilości białek w czasie
-    plt.plot(p53_array, label="p53", color="#0033cc")
-    plt.plot(NDMm_array, label="NDMm", color="#ffff00")
-    plt.plot(NDMst_array, label="NDMst", color="#003300")
-    plt.plot(PTEN_array, label="PTEN", color="#cc6699")
-    plt.ylabel("P53 value")
-    plt.xlabel("Time")
+    plt.plot(time, p53_array, label="p53", color="#0033cc")
+    plt.plot(time, NDMm_array, label="NDMm", color="#ffff00")
+    plt.plot(time, NDMst_array, label="NDMst", color="#003300")
+    plt.plot(time, PTEN_array, label="PTEN", color="#cc6699")
+    plt.ylabel("Protiein value")
+    plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig("RKIV.png")
+    plt.close()
 
     # Zapis wyników do pliku
     with open("./university/SymProcBiol/Runge-Kutta_Method/result.txt", "w") as file:
-        line = "p53 \t NDMm \t NDMst \t PTEN \n"
+        line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
         file.write(line)
         for i in range(len(PTEN_array)):
-            line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\n")
+            line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\t" + str(time[i]) + "\n")
             file.write(line)
 
 
-# funkcja okre                 
-def calculate_hop_length_p53(max_percent_change, hop, p53, NDMm, parameters):
-    after_hop_p53 = hop_result_p53(p53, NDMm, hop, parameters)
-    p53_diff = (abs(after_hop_p53 - p53) * 100) / p53
+# wyszukiwanie binarne najmniejszego skoku
+def find_min_hop(hop_arr):
+    min = hop_arr[0]
+
+    for i in range(1, len(hop_arr)):
+        if min > hop_arr[i]:
+            min = hop_arr[i]
     
+    return min
+
+
+# funkcja wyznaczająca optymalną długość następnego kroku dla p53              
+def calculate_hop_length(max_percent_change, hop, p53, NDMm, NDMst, PTEN, parameters):
+    
+    # tablica najoptymalniejszych kroków 
+    hop_arr = np.array([])
+    
+    # wartość po skoku
+    after_hop_p53 = hop_result_p53(p53, NDMm, hop, parameters)
+    after_hop_NDMm = hop_result_NDMm(NDMm, NDMst, PTEN, hop, parameters)
+    after_hop_NDMst = hop_result_NDMst(p53, NDMst, PTEN, hop, parameters)
+    after_hop_PTEN = hop_result_PTEN(p53, PTEN, hop, parameters)
+
+    # zmiana wartości w procentach
+    p53_diff = (abs(after_hop_p53 - p53) * 100) / p53
+    NDMm_diff = (abs(after_hop_NDMm - NDMm) * 100) / NDMm
+    NDMst_diff = (abs(after_hop_NDMst - NDMst) * 100) / NDMst
+    PTEN_diff = (abs(after_hop_PTEN - PTEN) * 100) / PTEN
+    
+    # szukanie odpowiedniego korku dla każdego białka
     if (p53 != after_hop_p53) and (p53_diff > max_percent_change):
         
         if hop/2 >= 0.75:
-            return calculate_hop_length_p53(max_percent_change=max_percent_change, hop=hop/2, p53=p53, NDMm=NDMm, parameters=parameters)
+            return calculate_hop_length(max_percent_change, hop/2, p53, NDMm, NDMst, PTEN, parameters)
         else:
-            return hop
-
+            hop_arr = np.append(hop_arr, hop)
     else:
-        return hop
-
-def calculate_hop_length_p53(max_percent_change, hop, p53, NDMm, parameters):
-    after_hop_p53 = hop_result_p53(p53, NDMm, hop, parameters)
-    p53_diff = (abs(after_hop_p53 - p53) * 100) / p53
+        hop_arr = np.append(hop_arr, hop)
     
-    if (p53 != after_hop_p53) and (p53_diff > max_percent_change):
+
+    if (NDMm != after_hop_NDMm) and (NDMm_diff > max_percent_change):
         
         if hop/2 >= 0.75:
-            return calculate_hop_length_p53(max_percent_change=max_percent_change, hop=hop/2, p53=p53, NDMm=NDMm, parameters=parameters)
+            return calculate_hop_length(max_percent_change, hop/2, p53, NDMm, NDMst, PTEN, parameters)
         else:
-            return hop
-
+            hop_arr = np.append(hop_arr, hop)
     else:
-        return hop
+        hop_arr = np.append(hop_arr, hop)
+
+
+    if (NDMst != after_hop_NDMst) and (NDMst_diff > max_percent_change):
+        
+        if hop/2 >= 0.75:
+            return calculate_hop_length(max_percent_change, hop/2, p53, NDMm, NDMst, PTEN, parameters)
+        else:
+            hop_arr = np.append(hop_arr, hop)
+    else:
+        hop_arr = np.append(hop_arr, hop)
+
+    if (PTEN != after_hop_PTEN) and (PTEN_diff > max_percent_change):
+        
+        if hop/2 >= 0.75:
+            return calculate_hop_length(max_percent_change, hop/2, p53, NDMm, NDMst, PTEN, parameters)
+        else:
+            hop_arr = np.append(hop_arr, hop)
+    else:
+        hop_arr = np.append(hop_arr, hop)
+    
+    hop_lengh = find_min_hop(hop_arr)
+
+    return hop_lengh
 
 
 
@@ -325,29 +369,52 @@ def RK_method_V2(p53=100, NDMm=100, NDMst=100, PTEN=100, hop=10, time=17280, PTE
         print("Parameters: no DNA damage")
         parameters["d2"] = 0.1
 
+    # inicjowanie tablic z wartościami białek i czasu
     counter = 0
     p53_array = np.array([p53])
-    p53_time_array = np.array([counter])
+    NDMm_array = np.array([NDMm])
+    NDMst_array = np.array([NDMst])
+    PTEN_array = np.array([PTEN])
+    time_array = np.array([counter])
+
+    # wykonywanie kalkulacji wartości białek aż do czasu maksymalnego
     while counter < time:
 
-        new_hop =  calculate_hop_length_p53(max_percent_change=5, hop=10, p53=p53_array[-1], NDMm=NDMm, parameters=parameters)
+        # określanie optymalnego czasu dla następnego skoku
+        new_hop =  calculate_hop_length(max_percent_change=5, hop=10, p53=p53_array[-1], NDMm=NDMm_array[-1], 
+                                        NDMst=NDMst_array[-1], PTEN=PTEN_array[-1], parameters=parameters)
+        # zwiększanie wartości czasu
         counter += new_hop
-        p53_time_array = np.append(p53_time_array, counter)
-        p53_array = np.append(p53_array, hop_result_p53(p53_array[-1], NDMm, new_hop, parameters))
+
+        # update tablicy wartości białek
+        time_array = np.append(time_array, counter)
+        p53_array = np.append(p53_array, hop_result_p53(p53_array[-1], NDMm_array[-1], new_hop, parameters))
+        NDMm_array = np.append(NDMm_array, hop_result_NDMm(NDMm_array[-1], NDMst_array[-1], PTEN_array[-1], new_hop, parameters))
+        NDMst_array = np.append(NDMst_array, hop_result_NDMst(p53_array[-1], NDMst_array[-1], PTEN_array[-1], new_hop, parameters))
+        PTEN_array = np.append(PTEN_array, hop_result_PTEN(p53_array[-1], PTEN_array[-1], new_hop, parameters))
 
 
-    print(p53_array)
-    print(p53_time_array)
     # rysowanie funkcji ilości białek w czasie
-    plt.plot(p53_array, p53_time_array, label="p53", color="#0033cc")
-   
-    plt.ylabel("P53 value")
-    plt.xlabel("Time")
+    plt.plot(time_array, p53_array, label="p53", color="#0033cc")
+    plt.plot(time_array, NDMm_array, label="NDMm", color="#ffff00")
+    plt.plot(time_array,NDMst_array,  label="NDMst", color="#003300")
+    plt.plot(time_array, PTEN_array, label="PTEN", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig("RKIV_changing_step.png")
+    plt.close()
+
+     # Zapis wyników do pliku
+    with open("./university/SymProcBiol/Runge-Kutta_Method/result_changing_step.txt", "w") as file:
+        line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
+        file.write(line)
+        for i in range(len(PTEN_array)):
+            line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\t" + str(time_array[i]) + "\n")
+            file.write(line)
   
 
 
 # wywołanie funkcji
-RK_method(hop=10, time=17280 * 3)
-RK_method_V2(hop=10, time=17280 * 3)
+RK_method(hop=10, time=172800)
+RK_method_V2(hop=10, time=172800)
