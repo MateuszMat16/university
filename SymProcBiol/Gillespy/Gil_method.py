@@ -23,12 +23,8 @@ def destruction_p53(p53, NDMm, parameters):
 def creation_NDMst(p53, parameters):
     p2 = parameters["p2"]
     k2 = parameters["k2"]
-    print("NDMst params", p2, p53, k2)
 
     result = p2 * ((p53**4) / (pow(p53, 4) + pow(k2, 4)))
-    print("up", p53**4, type(p53))
-    print("down", (pow(p53, 4) + pow(k2, 4)))
-    print("result", result)
     return result
 
 # przemiana NDMst w NDMm
@@ -143,6 +139,9 @@ def calculate_hop(p53, NDMm, NDMst, PTEN, parameters):
 # tworzenie symulacji dla podstawowego gillespyego
 def calculate_simulation(p53=100, NDMm=100, NDMst=100, PTEN=100, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
     
+    # rozwiązuje problem osiągania wartości maksymalnej przez zmienną
+    p53 = np.uint64(p53)
+    
     # utworzenie słownika (HashMap) dla każdego z parametrów
     parameters = {"p1": 8.8,
                   "d1": 1.375e-14,
@@ -250,4 +249,4 @@ def find_min_tau(hop_arr):
 
 
 
-calculate_simulation(time=100, DNA_damage=True, is_siRNA=True, PTEN_off=True)
+calculate_simulation(time=2880* 6)
