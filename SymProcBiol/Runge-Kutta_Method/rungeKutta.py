@@ -9,7 +9,7 @@ def calculate_dev_p53(p53_initial_value, NDMm_value, parameters):
     p1 = parameters["p1"]
 
     # obliczenie drugiej części pochodnej
-    second_part = d1 * p53_initial_value * NDMm_value
+    second_part = d1 * p53_initial_value * pow(NDMm_value, 2)
 
     return p1 - second_part
 
@@ -481,4 +481,3 @@ else:
     print("here")
 
 
-    
