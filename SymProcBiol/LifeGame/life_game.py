@@ -1,7 +1,11 @@
 import numpy as np
 import pygame as pg
-net = np.zeros([50, 50])
+from time import sleep
 
+# creates a filed for the game
+net = np.zeros([52, 52])
+print(net)
+# return the coordinates of neighbour cells 
 def get_neighbourhood_coordinates(x, y):
     coors = np.array([999, 999])
     x_coor = np.array([x - 1, x, x + 1])
@@ -52,51 +56,49 @@ def new_period(net, max_x, max_y):
             new_net[x, y] = cnc_cell_status(x, y, net)
     return new_net
 
-def calculate_simulation(iter_number, coordinates):
-    net = np.zeros([52, 52])
 
-    for coor in coordinates:
-        if coor[0] < 51 and coor[1] < 51:
-            net[coor[0], coor[1]] = 1
+def update_game(net, gameDisplay):
     
-    net_arr = np.array(net)
-    for i in range(iter_number):
-        tmp = new_period(net_arr[-1], 51, 51)
-        net_arr = np.append(net_arr, tmp)
+    #Size of squares
+    size = 16
+     
+    # ustawienie kolorów
+    black = (0,0,0)
 
-    return net_arr    
+    for i in range(1,51):
+        for z in range(1,51):
+            if net[z, i] == 1:
+                pg.draw.rect(gameDisplay, black,[size*z,size*i,size,size])
+            pg.draw.rect(gameDisplay, black,[size*z,size*i,size,size], 1)
+
+    pg.display.update()
 
 
 
-def makegame(net_arr):
-    print(net_arr)
+def makegame(net):
     pg.init()
 
-    # ustawienie kolorów
-    white,black = (255,255,255),(0,0,0)
+
 
     #set display
-    gameDisplay = pg.display.set_mode((1050,1050))
+    gameDisplay = pg.display.set_mode((1200,850))
 
     #caption
     pg.display.set_caption("Life Game")
 
-    #Size of squares
-    size = 20
-
-
+    # set background color
+    white = (255, 255, 255)
     gameDisplay.fill(white)
+    update_game(net, gameDisplay)
 
+    rotation = 0
+    while rotation < 10:
 
-    for net in net_arr:
-        print(net)
-        for i in range(1,51):
-            for z in range(1,51):
-                if net[z, i] == 1:
-                    pg.draw.rect(gameDisplay, black,[size*z,size*i,size,size])
-                pg.draw.rect(gameDisplay, black,[size*z,size*i,size,size], 1)
-
-        pg.display.update()
+        net = new_period(net, 50, 50)
+        update_game(net, gameDisplay)
+        rotation += 1
+        sleep(1)
+    
 
 
     #beginning of logic
@@ -112,5 +114,8 @@ def makegame(net_arr):
     #quit from pygame & python
     pg.quit()
 
-
-makegame(calculate_simulation(5, [[1, 2], [2, 2]]))
+net[1, 1] = 1
+net[0, 0] = 1
+net[51, 51] = 1
+print(net)
+makegame(net)

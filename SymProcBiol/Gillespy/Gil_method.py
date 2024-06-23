@@ -197,28 +197,28 @@ def calculate_simulation(p53=100, NDMm=100, NDMst=100, PTEN=100, time=17280, PTE
     # rysowanie funkcji ilości białek w czasie
     plt.plot(time_array, p53_array, label="p53", color="#0033cc")
     plt.ylabel("Protein value")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [min]")
     plt.legend(loc="upper left")
     plt.savefig("p53_Gil.png")
     plt.close()
 
     plt.plot(time_array, NDMm_array, label="NDMm", color="#ffff00")
     plt.ylabel("Protein value")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [min]")
     plt.legend(loc="upper left")
     plt.savefig("NDMm_Gil.png")
     plt.close()
 
     plt.plot(time_array,NDMst_array,  label="NDMst", color="#003300")
     plt.ylabel("Protein value")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [min]")
     plt.legend(loc="upper left")
     plt.savefig("NDMst_Gil.png")
     plt.close()
 
     plt.plot(time_array, PTEN_array, label="PTEN", color="#cc6699")
     plt.ylabel("Protein value")
-    plt.xlabel("Time [s]")
+    plt.xlabel("Time [min]")
     plt.legend(loc="upper left")
     plt.savefig("PTEN_Gil.png")
     plt.close()
@@ -249,4 +249,225 @@ def find_min_tau(hop_arr):
 
 
 
-calculate_simulation(time=2880* 6)
+# wyszukiwanie binarne najmniejszego tau
+# funkcja zwraca dodatkowo pozycję w tablicy zwycięzcy
+def find_min_tau(hop_arr):
+    min = hop_arr[0]
+    position = 0
+    for i in range(1, len(hop_arr)):
+        if min > hop_arr[i]:
+            position = i
+            min = hop_arr[i]
+    
+    return min, position
+
+
+# Metoda Next Hop
+# funkcja wykonuje jeden skok metodą pierwszej reakcji
+def calculate_next_hop(p53, NDMm, NDMst, PTEN, parameters):
+    
+    a1 = creation_p53(parameters) 
+    a2 = destruction_p53(p53, NDMm, parameters)
+    a3 = creation_NDMst(p53, parameters)
+    a4 = change_NDMst_to_NDMm(NDMst, PTEN, parameters)
+    a5 = destruction_NDMst(NDMst, parameters)
+    a6 = destruction_NDMm(NDMm, parameters)
+    a7 = creation_PTEN(p53, parameters)
+    a8 = destruction_PTEN(PTEN, parameters)
+
+    a_values = np.array([a1, a2, a3, a4, a5, a6, a7, a8])
+    tau_values = np.array([])
+    
+    for i in range(len(a_values)):
+        tau_values = np.append(tau_values, calculate_tau(a_values[i]))
+
+    tau, counter = find_min_tau(tau_values)
+
+
+    # aktualnie counter jest pozycją w tablicy zaczynającej się od 0
+    # uaktualniamy wartość w celu otrzymania numeru reakcji
+    counter += 1
+
+    if counter == 1:
+        p53 += 1
+    elif counter == 2:
+        p53 -= 1
+    elif counter == 3:
+        NDMst += 1
+    elif counter == 4:
+        NDMst -= 1
+        NDMm += 1
+    elif counter == 5:
+        NDMst -= 1
+    elif counter == 6:
+        NDMm -= 1
+    elif counter == 7:
+        PTEN += 1
+    elif counter == 8:
+        PTEN -= 1
+    else:
+        print("Something went wrong")
+
+    return p53, NDMm, NDMst, PTEN, tau
+
+
+# tworzenie symulacji dla metody następnej reakcji
+def calculate_simulation_next_hop(p53=100, NDMm=100, NDMst=100, PTEN=100, time=17280, PTEN_off=False, is_siRNA=False, DNA_damage=False):
+
+    # naprawia błąd przy którym liczba nie mieści się int32, więc zaczyna przyjmować ujemne wartości
+    p53 = np.uint64(p53)
+    
+    # utworzenie słownika (HashMap) dla każdego z parametrów
+    parameters = {"p1": 8.8,
+                  "d1": 1.375e-14,
+                  "d3": 3e-5,
+                  "k1": 1.925e-5,
+                  "k2": 1e5,
+                  "k3": 1.5e5,
+                  }
+
+    # warunek, gdy PTEN ne działa zmienia wartość parametru p3
+    if PTEN_off:
+        print("Parameters: PTEN is off")
+        parameters["p3"] = 0.0
+    else:
+        print("Parameters: PTEN is on")
+        parameters["p3"] = 100
+
+    # warunek na obecność siRNA, zmienia wartość paramteru p2
+    if is_siRNA:
+        print("Parameters: siRNA")
+        parameters["p2"] = 0.02
+    else:
+        print("Parameters: no siRNA")
+        parameters["p2"] = 440
+  
+    # warunek sprawdza czy w mamy uszkodzenia DNA i odpowiednio zmienia wartość parametru d2
+    if DNA_damage:
+        print("Parameters: DNA damage")
+        parameters["d2"] = 1.375e-4
+    else:
+        print("Parameters: no DNA damage")
+        parameters["d2"] = 0.1
+
+    # inicjowanie tablic z wartościami białek i czasu
+    counter = 0
+    p53_array = np.array([p53])
+    NDMm_array = np.array([NDMm])
+    NDMst_array = np.array([NDMst])
+    PTEN_array = np.array([PTEN])
+    time_array = np.array([counter])
+
+    # warunek końca symulacji
+    while time > counter:
+        new_p53, new_NDMm, new_NDMst, new_PTEN, tau = calculate_next_hop(p53_array[-1], NDMm_array[-1], NDMst_array[-1], PTEN_array[-1], parameters)
+        counter += tau
+        time_array = np.append(time_array, counter)
+        p53_array = np.append(p53_array, new_p53)
+        NDMm_array = np.append(NDMm_array, new_NDMm)
+        NDMst_array = np.append(NDMst_array, new_NDMst)
+        PTEN_array = np.append(PTEN_array, new_PTEN)
+    
+    
+
+    # rysowanie funkcji ilości białek w czasie
+    plt.plot(time_array, p53_array, label="p53", color="#0033cc")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [min]")
+    plt.legend(loc="upper left")
+    plt.savefig("p53_Gil_next_hop.png")
+    plt.close()
+
+    plt.plot(time_array, NDMm_array, label="NDMm", color="#ffff00")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [min]")
+    plt.legend(loc="upper left")
+    plt.savefig("NDMm_Gil_next_hop.png")
+    plt.close()
+
+    plt.plot(time_array,NDMst_array,  label="NDMst", color="#003300")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [min]")
+    plt.legend(loc="upper left")
+    plt.savefig("NDMst_Gil_next_hop.png")
+    plt.close()
+
+    plt.plot(time_array, PTEN_array, label="PTEN", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [min]")
+    plt.legend(loc="upper left")
+    plt.savefig("PTEN_Gil_next_hop.png")
+    plt.close()
+    # plt.savefig("RKIV_changing_step.png")
+    # plt.close()
+
+     # Zapis wyników do pliku
+    with open("./result_next_hop.txt", "w") as file:
+        line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
+        file.write(line)
+        for i in range(len(PTEN_array)):
+            line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\t" + str(time_array[i]) + "\n")
+            file.write(line)
+
+
+# domyśle wartości zmiennych
+p53=100
+NDMm=100
+NDMst=100
+PTEN=100
+hop_state=False
+time=100
+PTEN_off=False
+is_siRNA=False
+DNA_damage=False
+
+
+
+# wczytywanie zmiennych z pliku
+with open("./input.txt", "r") as input:
+    inputs= {}
+    print("starting!")
+    lines = input.readlines()
+    for line in lines:
+        if line.startswith("#"):
+            continue
+        if line.strip() == '':
+            continue
+        
+        tmp = line.split("=")
+        inputs[tmp[0]] = tmp[1].strip()
+    
+
+    if inputs["p53"] != p53:
+        p53 = float(inputs["p53"])
+    
+    if inputs["NDMm"] != NDMm:
+        NDMm = float(inputs["NDMm"])
+
+    if inputs["NDMst"] != NDMst:
+        NDMst = float(inputs["NDMst"])
+
+    if inputs["PTEN"] != PTEN:
+        PTEN = float(inputs["PTEN"])
+
+    if inputs["time"] != time:
+        time = int(inputs["time"])
+
+    if inputs["hop_state"] == "1":
+        hop_state = True
+    
+    if inputs["PTEN_off"] == "1":
+        PTEN_off = True
+
+    if inputs["is_siRNA"] == "1":
+        is_siRNA = True    
+    
+    if inputs["DNA_damage"] == "1":
+        DNA_damage = True
+
+# wybór zmiennego lub stałego kroku
+if hop_state:
+    calculate_simulation_next_hop(p53, NDMm, NDMst, PTEN, time, PTEN_off, is_siRNA, DNA_damage)
+
+else:
+    calculate_simulation(p53, NDMm, NDMst, PTEN, time, PTEN_off, is_siRNA, DNA_damage)

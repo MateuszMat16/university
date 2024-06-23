@@ -1,0 +1,25 @@
+# Witam w pliku wejściowym
+# tutaj definiowane są wartości początkowe do symulacji
+# W celu zmiany wartości należy zmienić liczbę przy parametrze
+
+# Ilości poszczególnych białek
+p53=100
+NDMm=100
+NDMst=100
+PTEN=100
+
+
+# Wybór metody Gillaspiego, 0 - standardowa, 1 - next hop
+hop_state=1
+
+# Czas w sekundach symulacji
+time=2880
+
+# Czy PTEN ma być wyłączone, 0 - nie, 1 - tak
+PTEN_off=0
+
+# Czy siRNA ma być obecne, 0 - nie, 1 - tak
+is_siRNA=0
+    
+# Czy istnieją uszkodzenia DNA, 0 - nie, 1 - tak
+DNA_damage=0
