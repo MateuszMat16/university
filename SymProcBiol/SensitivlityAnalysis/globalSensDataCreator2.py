@@ -6,15 +6,15 @@ def create_parameters_set():
 
     parameters["p1"] = random.uniform(0, 20)
     parameters["p2"] = random.uniform(0, 1000)
-    parameters["p3"] = random.uniform(0, 1000)
+    parameters["p3"] = 0
     print(parameters["p1"], parameters["p2"], parameters["p3"])
 
     parameters["d1"] = random.uniform(1e-14, 1e-13)
-    parameters["d2"] = random.uniform(1e-14, 1e-13)
-    parameters["d3"] = random.uniform(1e-14, 1e-13)
+    parameters["d2"] = random.uniform(1e-2, 1e-1)
+    parameters["d3"] = random.uniform(1e-5, 1e-4)
     print(parameters["d1"], parameters["d2"], parameters["d3"])
 
-    parameters["k1"] = random.uniform(1e-4, 9.9e-4)
+    parameters["k1"] = random.uniform(1e-5, 1e-4)
     parameters["k2"] = random.uniform(1e5, 5e5)
     parameters["k3"] = random.uniform(1e5, 5e5)
     print(parameters["k1"], parameters["k2"], parameters["k3"])
@@ -227,42 +227,21 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
 # można je zmienić podając nowe odpowiednio NDMm=50
 # czas to 48 h = 60 s * 60 min * 24 h * 2 dni
 # domyślenie PTEN jest aktywny, brak siRNA oraz nie ma uszkodzeń DNA
-def RK_method(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800, PTEN_off=False, is_siRNA=False, DNA_damage=False):
+def RK_method(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800, number=0):
 
+
+        
     # utworzenie słownika (HashMap) dla każdego z parametrów
-    parameters = create_parameters_set()
-
-    # warunek, gdy PTEN ne działa zmienia wartość parametru p3
-    if PTEN_off:
-        print("Parameters: PTEN is off")
-        parameters["p3"] = 0.0
-    else:
-        print("Parameters: PTEN is on")
-        parameters["p3"] = 100
-
-    # warunek na obecność siRNA, zmienia wartość paramteru p2
-    if is_siRNA:
-        print("Parameters: siRNA")
-        parameters["p2"] = 0.02
-    else:
-        print("Parameters: no siRNA")
-        parameters["p2"] = 440
-  
-    # warunek sprawdza czy w mamy uszkodzenia DNA i odpowiednio zmienia wartość parametru d2
-    if DNA_damage:
-        print("Parameters: DNA damage")
-        parameters["d2"] = 1.375e-4
-    else:
-        print("Parameters: no DNA damage")
-        parameters["d2"] = 0.1
+    parameters = create_parameters_set()  
 
     # Wywołanie funkcji wykonującej całą symulację
     # przekazanie wszytkich danych wejściowych białek oraz parametrów
     p53_array, NDMm_array, NDMst_array, PTEN_array = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
-                                                                          hop=hop, time=time, parameters=parameters)
+                                                                        hop=hop, time=time, parameters=parameters)
     # utworzenie macierzy czasu
     time = np.array([x for x in range(0, time + 1, hop)])
 
+    file_name = "RKIV" + str(number) + ".png"
     # rysowanie funkcji ilości białek w czasie
     plt.plot(time, p53_array, label="p53", color="#0033cc")
     plt.plot(time, NDMm_array, label="NDMm", color="#ffff00")
@@ -271,16 +250,35 @@ def RK_method(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800, PTEN_off=Fals
     plt.ylabel("Protiein value")
     plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.savefig("RKIV.png")
+    plt.savefig(file_name)
     plt.close()
 
     # Zapis wyników do pliku
-    with open("result.txt", "w") as file:
+    file_name = "result" + str(number) + ".txt"
+    with open(file_name, "w") as file:
         line = "p53 \t NDMm \t NDMst \t PTEN \t time \n"
         file.write(line)
         for i in range(len(PTEN_array)):
             line = (str(p53_array[i]) + "\t" + str(NDMm_array[i]) + "\t" + str(NDMst_array[i]) + "\t" + str(PTEN_array[i]) + "\t" + str(time[i]) + "\n")
             file.write(line)
 
+    file_name = "parameters" + str(number) + ".txt"
+    with open(file_name, "w") as file1:
+        line = "p1 \t p2 \t p3 \n"
+        file1.write(line)
+        line = str(parameters["p1"]) + "\t" + str(parameters["p2"]) + "\t" + str(parameters["p3"]) + "\n"   
+        file1.write(line)
 
-RK_method()
+        line = "d1 \t d2 \t d3 \n"
+        file1.write(line)
+        line = str(parameters["d1"]) + "\t" + str(parameters["d2"]) + "\t" + str(parameters["d3"]) + "\n"   
+        file1.write(line)
+
+        line = "k1 \t k2 \t k3 \n"
+        file1.write(line)
+        line = str(parameters["k1"]) + "\t" + str(parameters["k2"]) + "\t" + str(parameters["k3"]) + "\n"   
+        file1.write(line)
+        
+
+for i in range(20):
+    RK_method(number=i)
