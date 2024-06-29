@@ -258,7 +258,7 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     second_simulation_set = np.array([])
     third_simulation_set = np.array([])
 
-    for i in range(20):
+    for i in range(50):
         print("starting set: ", i)
         # utworzenie słownika (HashMap) dla każdego z parametrów
         left_parameters = create_parameters_set_left()
@@ -369,12 +369,127 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     the_D_p53 = p53_squeared_in_time - (p53_in_time**2)
     the_D_NDMm = NDMm_squeared_in_time - (NDMm_in_time**2)
     the_D_NDMst = NDMst_squeared_in_time - (NDMst_in_time**2)
-    the_D_PTEM = PTEN_squeared_in_time - (PTEN_in_time**2)
+    the_D_PTEN = PTEN_squeared_in_time - (PTEN_in_time**2)
 
-    print("Global analysis second part done!")
-    print(the_D_NDMm)
-    print(the_D_p53)
+    print("Global analysis step2 done!")
 
+    print("Global analysis step3")
+
+    p53_sum_array = np.zeros(total_lengh)
+    NDMm_sum_array = np.zeros(total_lengh)
+    NDMst_sum_array = np.zeros(total_lengh)
+    PTEN_sum_array = np.zeros(total_lengh)
+
+    for i in range(len(first_simulations_set)):
+
+        p53_array = first_simulations_set[i]["p53_array"]
+        NDMm_array = first_simulations_set[i]["NDMm_array"]
+        NDMst_array = first_simulations_set[i]["NDMst_array"]
+        PTEN_array = first_simulations_set[i]["PTEN_array"]
+
+        prim2_p53_array = second_simulation_set[i]["p53_array"]
+        prim2_NDMm_array = second_simulation_set[i]["NDMm_array"]
+        prim2_NDMst_array = second_simulation_set[i]["NDMst_array"]
+        prim2_PTEN_array = second_simulation_set[i]["PTEN_array"]
+
+
+
+        for i in range(total_lengh):
+            p53_sum_array[i] = p53_sum_array[i] + (p53_array[i] * prim2_p53_array[i])
+            NDMm_sum_array[i] = NDMm_sum_array[i] + (NDMm_array[i] * prim2_NDMm_array[i])
+            NDMst_sum_array[i] = NDMst_sum_array[i] + (NDMst_array[i] * prim2_NDMst_array[i])
+            PTEN_sum_array[i] = PTEN_sum_array[i] + (PTEN_array[i] * prim2_PTEN_array[i])
+        
+    p53_prim2_in_time = p53_sum_array/ len(first_simulations_set)
+    NDMm_prim2_in_time = NDMm_sum_array/ len(first_simulations_set)
+    NDMst_prim2_in_time = NDMst_sum_array/ len(first_simulations_set)
+    PTEN_prim2_in_time = PTEN_sum_array/ len(first_simulations_set)
+
+    the_Dy_p53 = p53_prim2_in_time - (p53_in_time**2)
+    the_Dy_NDMm = NDMm_prim2_in_time - (NDMm_in_time**2)
+    the_Dy_NDMst = NDMst_prim2_in_time - (NDMst_in_time**2)
+    the_Dy_PTEN = PTEN_prim2_in_time - (PTEN_in_time**2)
+    print("Global analysis step3 done")
+
+    print("Global analysis step4")
+    p53_sum_array = np.zeros(total_lengh)
+    NDMm_sum_array = np.zeros(total_lengh)
+    NDMst_sum_array = np.zeros(total_lengh)
+    PTEN_sum_array = np.zeros(total_lengh)
+
+    for i in range(len(first_simulations_set)):
+
+        p53_array = first_simulations_set[i]["p53_array"]
+        NDMm_array = first_simulations_set[i]["NDMm_array"]
+        NDMst_array = first_simulations_set[i]["NDMst_array"]
+        PTEN_array = first_simulations_set[i]["PTEN_array"]
+
+        prim1_p53_array = third_simulation_set[i]["p53_array"]
+        prim1_NDMm_array = third_simulation_set[i]["NDMm_array"]
+        prim1_NDMst_array = third_simulation_set[i]["NDMst_array"]
+        prim1_PTEN_array = third_simulation_set[i]["PTEN_array"]
+
+
+
+        for i in range(total_lengh):
+            p53_sum_array[i] = p53_sum_array[i] + (p53_array[i] * prim1_p53_array[i])
+            NDMm_sum_array[i] = NDMm_sum_array[i] + (NDMm_array[i] * prim1_NDMm_array[i])
+            NDMst_sum_array[i] = NDMst_sum_array[i] + (NDMst_array[i] * prim1_NDMst_array[i])
+            PTEN_sum_array[i] = PTEN_sum_array[i] + (PTEN_array[i] * prim1_PTEN_array[i])
+        
+    p53_prim1_in_time = p53_sum_array/ len(first_simulations_set)
+    NDMm_prim1_in_time = NDMm_sum_array/ len(first_simulations_set)
+    NDMst_prim1_in_time = NDMst_sum_array/ len(first_simulations_set)
+    PTEN_prim1_in_time = PTEN_sum_array/ len(first_simulations_set)
+
+    the_Dz_p53 = p53_prim1_in_time - (p53_in_time**2)
+    the_Dz_NDMm = NDMm_prim1_in_time - (NDMm_in_time**2)
+    the_Dz_NDMst = NDMst_prim1_in_time - (NDMst_in_time**2)
+    the_Dz_PTEN = PTEN_prim1_in_time - (PTEN_in_time**2)
+    print("Global analysis step4 done!")
+
+    print("Final calculations!")
+    Dtot_p53_p1 = the_D_p53 - the_Dz_p53
+    S_p53_p1 = the_Dy_p53 / the_D_p53
+    Stot_p53_p1 = Dtot_p53_p1 / the_D_p53
+
+    Dtot_NDMm_p1 = the_D_NDMm - the_Dz_NDMm
+    S_NDMm_p1 = the_Dy_NDMm / the_D_NDMm
+    Stot_NDMm_p1 = Dtot_NDMm_p1 / the_D_NDMm
+
+    Dtot_NDMst_p1 = the_D_NDMst - the_Dz_NDMst
+    S_NDMst_p1 = the_Dy_NDMst / the_D_NDMst
+    Stot_NDMst_p1 = Dtot_NDMst_p1 / the_D_NDMst
+
+    Dtot_PTEN_p1 = the_D_PTEN - the_Dz_PTEN
+    S_PTEN_p1 = the_Dy_PTEN / the_D_PTEN
+    Stot_PTEN_p1 = Dtot_PTEN_p1 / the_D_PTEN
+    print("Calculations Done!")
+    print(S_p53_p1, S_NDMm_p1, S_NDMst_p1, S_PTEN_p1)
+
+    plt.plot(S_p53_p1, label="p53", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [s]")
+    plt.legend(loc="upper left")
+    plt.show()
+
+    plt.plot(S_NDMm_p1, label="p53", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [s]")
+    plt.legend(loc="upper left")
+    plt.show()
+
+    plt.plot(S_NDMst_p1, label="p53", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [s]")
+    plt.legend(loc="upper left")
+    plt.show()
+
+    plt.plot(S_PTEN_p1, label="p53", color="#cc6699")
+    plt.ylabel("Protein value")
+    plt.xlabel("Time [s]")
+    plt.legend(loc="upper left")
+    plt.show()
 
 Global_analysis()
 
