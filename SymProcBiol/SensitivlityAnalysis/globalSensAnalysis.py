@@ -1,7 +1,8 @@
 import random
 
-# generuj randomowe parametry
+# generuj losowe parametry
 def create_parameters_set_left():
+    # utworzenie słownika z parametrami
     parameters = {}
 
     parameters["p1"] = random.uniform(0, 20)
@@ -24,6 +25,7 @@ def create_parameters_set_left():
 
 # generuj randomowe parametry
 def create_parameters_set_right():
+    # utworzenie słownika z parametrami
     parameters = {}
 
     parameters["p1"] = random.uniform(0, 20)
@@ -254,18 +256,28 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
 # domyślenie PTEN jest aktywny, brak siRNA oraz nie ma uszkodzeń DNA
 def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     print("Global analysis starting!")
+
+    # Tworzone są talice zawierające wyniki symulacji z poszczególnymi kompinacjami parametrów
+    # y1=(x1, x2, y)
     first_simulations_set = np.array([])
+    # y2=(x1, x2', y)
     second_simulation_set = np.array([])
+    # y3=(x1', x2, y)
     third_simulation_set = np.array([])
 
+    # Dlugosc petli zalezna od N, 
+    # W tym przypadku N = 50
     for i in range(50):
         print("starting set: ", i)
+
         # utworzenie słownika (HashMap) dla każdego z parametrów
         left_parameters = create_parameters_set_left()
         right_parameters = create_parameters_set_right()
 
+        # parametry dla symulacji y1
         first_parameters_set = left_parameters
 
+        # parametry dla symulacji y2
         second_parameters_set = {}
         second_parameters_set["p1"] = right_parameters["p1"]
         second_parameters_set["p2"] = left_parameters["p2"]
@@ -279,6 +291,7 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
         second_parameters_set["k2"] = right_parameters["k2"]
         second_parameters_set["k3"] = right_parameters["k3"]
 
+        # parametry dla symulacji y3
         third_parameters_set = {}
         third_parameters_set["p1"] = left_parameters["p1"]
         third_parameters_set["p2"] = right_parameters["p2"]
@@ -293,46 +306,58 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
         third_parameters_set["k3"] = left_parameters["k3"]
 
 
+        # wykonywanie pierwszej symulacji
+        # inicjalizacja słownika z wynikami symulacji
         simulation_first = {}
         simulation_first["p53_array"], simulation_first["NDMm_array"], simulation_first["NDMst_array"], simulation_first["PTEN_array"] = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
                                                                             hop=hop, time=time, parameters=first_parameters_set)
+        # dodawanie słownika do tablicy symulacji pierwszych
         first_simulations_set = np.append(first_simulations_set, simulation_first)
 
-
+        # wykonywanie drugiej symulacji
+        # inicjalizacja słownika z wynikami symulacji
         simulation_second = {}
         simulation_second["p53_array"], simulation_second["NDMm_array"], simulation_second["NDMst_array"], simulation_second["PTEN_array"] = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
                                                                             hop=hop, time=time, parameters=second_parameters_set)
+        # dodawanie słownika do tablicy symulacji drugich        
         second_simulation_set = np.append(second_simulation_set, simulation_second)
 
-
+        # wykonywanie trzeciej symulacji
+        # inicjalizacja słownika z wynikami symulacji
         simulation_third = {}
         simulation_third["p53_array"], simulation_third["NDMm_array"], simulation_third["NDMst_array"], simulation_third["PTEN_array"] = calculate_symulation(p53=p53, NDMm=NDMm, NDMst=NDMst, PTEN=PTEN, 
                                                                             hop=hop, time=time, parameters=third_parameters_set)
+        # dodawanie słownika do tablicy symulacji trzecich
         third_simulation_set = np.append(third_simulation_set, simulation_third)
 
     print("Global analysis step1")
-
+    # rozpoczynanie wyznaczania pierwszej sumy
+    # długość wyników jednej symulacji time / hope
     total_lengh = len(first_simulations_set[0]["p53_array"])
 
+    # tworzenie pustych tablic, ktore beda zawieraly sumy dla symulacji x i bialka y
     p53_sum_array = np.zeros(total_lengh)
     NDMm_sum_array = np.zeros(total_lengh)
     NDMst_sum_array = np.zeros(total_lengh)
     PTEN_sum_array = np.zeros(total_lengh)
 
+    # petla w zakresie dlugosci symulacji tworzaca sumy
     for i in range(len(first_simulations_set)):
 
+        # przepisywanie wartosci do zmiennych
         p53_array = first_simulations_set[i]["p53_array"]
         NDMm_array = first_simulations_set[i]["NDMm_array"]
         NDMst_array = first_simulations_set[i]["NDMst_array"]
         PTEN_array = first_simulations_set[i]["PTEN_array"]
 
+        # obliczanie sum w petli
         for i in range(total_lengh):
             p53_sum_array[i] += p53_array[i]
             NDMm_sum_array[i] += NDMm_array[i]
             NDMst_sum_array[i] += NDMst_array[i]
             PTEN_sum_array[i] += PTEN_array[i]
 
-    # y
+    # obliczanie y0(t) dla kazdego bialka
     p53_in_time = p53_sum_array/ len(first_simulations_set)
     NDMm_in_time = NDMm_sum_array/ len(first_simulations_set)
     NDMst_in_time = NDMst_sum_array/ len(first_simulations_set)
@@ -341,12 +366,15 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
 
 
     print("Global analysis step2")
+    # rozpoczynanie wyznaczania drugiej sumy
 
+    # tworzenie pustych tablic, ktore beda zawieraly sumy dla symulacji x i bialka y
     p53_sum_array = np.zeros(total_lengh)
     NDMm_sum_array = np.zeros(total_lengh)
     NDMst_sum_array = np.zeros(total_lengh)
     PTEN_sum_array = np.zeros(total_lengh)
 
+    # obliczanie sum dla każdego czasu t
     for i in range(len(first_simulations_set)):
 
         p53_array = first_simulations_set[i]["p53_array"]
@@ -354,18 +382,20 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
         NDMst_array = first_simulations_set[i]["NDMst_array"]
         PTEN_array = first_simulations_set[i]["PTEN_array"]
 
+         # petla w zakresie dlugosci symulacji tworzaca sumy
         for i in range(total_lengh):
             p53_sum_array[i] = p53_sum_array[i] + (p53_array[i]**2)
             NDMm_sum_array[i] = NDMm_sum_array[i] + (NDMm_array[i]**2)
             NDMst_sum_array[i] = NDMst_sum_array[i] + (NDMst_array[i]**2)
             PTEN_sum_array[i] = PTEN_sum_array[i] + (PTEN_array[i]**2)
 
-    # D + y^2
+    # finalne obliczenie sumy D + y^2 suma/N
     p53_squeared_in_time = p53_sum_array/ len(first_simulations_set)
     NDMm_squeared_in_time = NDMm_sum_array/ len(first_simulations_set)
     NDMst_squeared_in_time = NDMst_sum_array/ len(first_simulations_set)
     PTEN_squeared_in_time = PTEN_sum_array/ len(first_simulations_set)
 
+    # obliczenie parametru D
     the_D_p53 = p53_squeared_in_time - (p53_in_time**2)
     the_D_NDMm = NDMm_squeared_in_time - (NDMm_in_time**2)
     the_D_NDMst = NDMst_squeared_in_time - (NDMst_in_time**2)
@@ -374,12 +404,15 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     print("Global analysis step2 done!")
 
     print("Global analysis step3")
+    # rozpoczynanie wyznaczania trzeciej sumy
 
+    # tworzenie pustych tablic, ktore beda zawieraly sumy dla symulacji x i bialka y
     p53_sum_array = np.zeros(total_lengh)
     NDMm_sum_array = np.zeros(total_lengh)
     NDMst_sum_array = np.zeros(total_lengh)
     PTEN_sum_array = np.zeros(total_lengh)
 
+    # obliczanie dla każdego czasu t wartości sumy 
     for i in range(len(first_simulations_set)):
 
         p53_array = first_simulations_set[i]["p53_array"]
@@ -393,18 +426,20 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
         prim2_PTEN_array = second_simulation_set[i]["PTEN_array"]
 
 
-
+        # petla w zakresie dlugosci symulacji tworzaca sumy
         for i in range(total_lengh):
             p53_sum_array[i] = p53_sum_array[i] + (p53_array[i] * prim2_p53_array[i])
             NDMm_sum_array[i] = NDMm_sum_array[i] + (NDMm_array[i] * prim2_NDMm_array[i])
             NDMst_sum_array[i] = NDMst_sum_array[i] + (NDMst_array[i] * prim2_NDMst_array[i])
             PTEN_sum_array[i] = PTEN_sum_array[i] + (PTEN_array[i] * prim2_PTEN_array[i])
-        
+    
+    #  sum/N
     p53_prim2_in_time = p53_sum_array/ len(first_simulations_set)
     NDMm_prim2_in_time = NDMm_sum_array/ len(first_simulations_set)
     NDMst_prim2_in_time = NDMst_sum_array/ len(first_simulations_set)
     PTEN_prim2_in_time = PTEN_sum_array/ len(first_simulations_set)
 
+    # obliczanie D1
     the_Dy_p53 = p53_prim2_in_time - (p53_in_time**2)
     the_Dy_NDMm = NDMm_prim2_in_time - (NDMm_in_time**2)
     the_Dy_NDMst = NDMst_prim2_in_time - (NDMst_in_time**2)
@@ -412,11 +447,15 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     print("Global analysis step3 done")
 
     print("Global analysis step4")
+    # rozpoczynanie wyznaczania czwartej sumy
+
+    # tworzenie pustych tablic, ktore beda zawieraly sumy dla symulacji x i bialka y
     p53_sum_array = np.zeros(total_lengh)
     NDMm_sum_array = np.zeros(total_lengh)
     NDMst_sum_array = np.zeros(total_lengh)
     PTEN_sum_array = np.zeros(total_lengh)
 
+    # obliczanie sumy dla każdego czasu t w symulacji
     for i in range(len(first_simulations_set)):
 
         p53_array = first_simulations_set[i]["p53_array"]
@@ -430,18 +469,20 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
         prim1_PTEN_array = third_simulation_set[i]["PTEN_array"]
 
 
-
+        # petla w zakresie dlugosci symulacji tworzaca sumy
         for i in range(total_lengh):
             p53_sum_array[i] = p53_sum_array[i] + (p53_array[i] * prim1_p53_array[i])
             NDMm_sum_array[i] = NDMm_sum_array[i] + (NDMm_array[i] * prim1_NDMm_array[i])
             NDMst_sum_array[i] = NDMst_sum_array[i] + (NDMst_array[i] * prim1_NDMst_array[i])
             PTEN_sum_array[i] = PTEN_sum_array[i] + (PTEN_array[i] * prim1_PTEN_array[i])
-        
+    
+    # suma / N
     p53_prim1_in_time = p53_sum_array/ len(first_simulations_set)
     NDMm_prim1_in_time = NDMm_sum_array/ len(first_simulations_set)
     NDMst_prim1_in_time = NDMst_sum_array/ len(first_simulations_set)
     PTEN_prim1_in_time = PTEN_sum_array/ len(first_simulations_set)
 
+    # obliczanie D2
     the_Dz_p53 = p53_prim1_in_time - (p53_in_time**2)
     the_Dz_NDMm = NDMm_prim1_in_time - (NDMm_in_time**2)
     the_Dz_NDMst = NDMst_prim1_in_time - (NDMst_in_time**2)
@@ -449,23 +490,32 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     print("Global analysis step4 done!")
 
     print("Final calculations!")
+
+    # p53 obliczenia
+    # obliczanie D tot, S1 oraz S1 tot
     Dtot_p53_p1 = the_D_p53 - the_Dz_p53
     S_p53_p1 = the_Dy_p53 / the_D_p53
     Stot_p53_p1 = Dtot_p53_p1 / the_D_p53
 
+    # NDMm obliczenia
+    # obliczanies D tot, S1 oraz S1 tot
     Dtot_NDMm_p1 = the_D_NDMm - the_Dz_NDMm
     S_NDMm_p1 = the_Dy_NDMm / the_D_NDMm
     Stot_NDMm_p1 = Dtot_NDMm_p1 / the_D_NDMm
 
+    # NDMst obliczenia
+    # obliczanie D tot, S1 oraz S1 tot
     Dtot_NDMst_p1 = the_D_NDMst - the_Dz_NDMst
     S_NDMst_p1 = the_Dy_NDMst / the_D_NDMst
     Stot_NDMst_p1 = Dtot_NDMst_p1 / the_D_NDMst
 
+    # PTEN obliczenia
+    # obliczanie D tot, S1 oraz S1 tot
     Dtot_PTEN_p1 = the_D_PTEN - the_Dz_PTEN
     S_PTEN_p1 = the_Dy_PTEN / the_D_PTEN
     Stot_PTEN_p1 = Dtot_PTEN_p1 / the_D_PTEN
     print("Calculations Done!")
-    print(S_p53_p1, S_NDMm_p1, S_NDMst_p1, S_PTEN_p1)
+
 
     plt.plot(S_p53_p1, label="p53", color="#cc6699")
     plt.ylabel("Protein value")
