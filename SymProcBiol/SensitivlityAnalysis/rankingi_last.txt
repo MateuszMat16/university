@@ -1,0 +1,5 @@
+Bia³ko	ostatnia wartoœæ S1	ostatnia wartoœæ S1 total
+p53	0.2205	0.3564
+NDMm	12.1939	-3753.7629
+NDMst	0.9125	-146.7655
+PTEN	-0.7027	0.0201

@@ -249,11 +249,9 @@ def calculate_symulation(p53, NDMm, NDMst, PTEN, hop, time, parameters):
     return p53_array, NDMm_array, NDMst_array, PTEN_array
 
 
-# Główna funkcja Symulacji Runge-Kutty IV
-# podane parametry są wartościami domyślnymi
-# można je zmienić podając nowe odpowiednio NDMm=50
-# czas to 48 h = 60 s * 60 min * 24 h * 2 dni
-# domyślenie PTEN jest aktywny, brak siRNA oraz nie ma uszkodzeń DNA
+
+# funkcja globalnej analizy wrażliwości symulacji
+# czas symulacji, skok oraz wartości białek są zmienne i definiowane przy wywołaniu funkcji
 def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     print("Global analysis starting!")
 
@@ -494,52 +492,83 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
     # p53 obliczenia
     # obliczanie D tot, S1 oraz S1 tot
     Dtot_p53_p1 = the_D_p53 - the_Dz_p53
-    S_p53_p1 = the_Dy_p53 / the_D_p53
-    Stot_p53_p1 = Dtot_p53_p1 / the_D_p53
+    S_p53_p1 = np.nan_to_num(the_Dy_p53 / the_D_p53)
+    Stot_p53_p1 = np.nan_to_num(Dtot_p53_p1 / the_D_p53)
 
     # NDMm obliczenia
     # obliczanies D tot, S1 oraz S1 tot
     Dtot_NDMm_p1 = the_D_NDMm - the_Dz_NDMm
-    S_NDMm_p1 = the_Dy_NDMm / the_D_NDMm
-    Stot_NDMm_p1 = Dtot_NDMm_p1 / the_D_NDMm
+    S_NDMm_p1 = np.nan_to_num(the_Dy_NDMm / the_D_NDMm)
+    Stot_NDMm_p1 = np.nan_to_num(Dtot_NDMm_p1 / the_D_NDMm)
 
     # NDMst obliczenia
     # obliczanie D tot, S1 oraz S1 tot
     Dtot_NDMst_p1 = the_D_NDMst - the_Dz_NDMst
-    S_NDMst_p1 = the_Dy_NDMst / the_D_NDMst
-    Stot_NDMst_p1 = Dtot_NDMst_p1 / the_D_NDMst
+    S_NDMst_p1 = np.nan_to_num(the_Dy_NDMst / the_D_NDMst)
+    Stot_NDMst_p1 = np.nan_to_num(Dtot_NDMst_p1 / the_D_NDMst)
 
     # PTEN obliczenia
     # obliczanie D tot, S1 oraz S1 tot
     Dtot_PTEN_p1 = the_D_PTEN - the_Dz_PTEN
-    S_PTEN_p1 = the_Dy_PTEN / the_D_PTEN
-    Stot_PTEN_p1 = Dtot_PTEN_p1 / the_D_PTEN
+    S_PTEN_p1 = np.nan_to_num(the_Dy_PTEN / the_D_PTEN)
+    Stot_PTEN_p1 = np.nan_to_num(Dtot_PTEN_p1 / the_D_PTEN)
     print("Calculations Done!")
 
 
-    plt.plot(S_p53_p1, label="p53", color="#cc6699")
-    plt.ylabel("Protein value")
-    plt.xlabel("Time [s]")
-    plt.legend(loc="upper left")
-    plt.show()
+    
 
-    plt.plot(S_NDMm_p1, label="p53", color="#cc6699")
-    plt.ylabel("Protein value")
+    # utworzenie tablicy czasow
+    time = np.array([x for x in range(0, time + 1, hop)])
+    print("Creating Plots!")
+    plt.plot(time, S_p53_p1, label="S1", color="#cc6699")
+    plt.plot(time, Stot_p53_p1, label="Stot1", color="#62b863")
+    plt.ylabel("wrażliwość S1 oraz Stot dla p53")
     plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig("Sensitivity_p53.png")
+    plt.close()
 
-    plt.plot(S_NDMst_p1, label="p53", color="#cc6699")
-    plt.ylabel("Protein value")
+    plt.plot(time, S_NDMm_p1, label="S1", color="#cc6699")
+    plt.plot(time, Stot_NDMm_p1, label="Stot1", color="#62b863")
+    plt.ylabel("wrażliwość S1 oraz Stot dla NDMst")
     plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig("Sensitivity_NDMm.png")
+    plt.close()
 
-    plt.plot(S_PTEN_p1, label="p53", color="#cc6699")
-    plt.ylabel("Protein value")
+    plt.plot(time, S_NDMst_p1, label="S1", color="#cc6699")
+    plt.plot(time, Stot_NDMst_p1, label="Stot1", color="#62b863")
+    plt.ylabel("wrażliwość S1 oraz Stot dla NDMst")
     plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
-    plt.show()
+    plt.savefig("Sensitivity_NDMst.png")
+    plt.close()
+
+    plt.plot(time, S_PTEN_p1, label="S1", color="#cc6699")
+    plt.plot(time, Stot_PTEN_p1, label="Stot1", color="#62b863")
+    plt.ylabel("wrażliwość S1 oraz Stot dla PTEN")
+    plt.xlabel("Time [s]")
+    plt.legend(loc="upper left")
+    plt.savefig("Sensitivity_PTEN.png")
+    plt.close()
+   
+    # ranking średni
+    # zapis do pliku
+    with open("rankingi_mean.txt", "w") as file:
+        file.write("Białko" + "\t" + "średnia wartość S1" + "\t" + "średnia wartość S1 total" + "\n")
+        file.write("p53" + "\t" + str(round(np.mean(S_p53_p1), 4)) + "\t" + str(round(np.mean(Stot_p53_p1), 4)) + "\n" )
+        file.write("NDMm" + "\t" + str(round(np.mean(S_NDMm_p1), 4)) + "\t" + str(round(np.mean(Stot_NDMm_p1), 4)) + "\n" )
+        file.write("NDMst" + "\t" + str(round(np.mean(S_NDMst_p1), 4)) + "\t" + str(round(np.mean(Stot_NDMst_p1), 4)) + "\n" )
+        file.write("PTEN" + "\t" + str(round(np.mean(S_PTEN_p1), 4)) + "\t" + str(round(np.mean(Stot_PTEN_p1), 4)) + "\n" )
+
+      # ranking ostatni punkt
+      # zapis do pliku
+    with open("rankingi_last.txt", "w") as file:
+        file.write("Białko" + "\t" + "ostatnia wartość S1" + "\t" + "ostatnia wartość S1 total" + "\n")
+        file.write("p53" + "\t" + str(round(S_p53_p1[-1], 4)) + "\t" + str(round(Stot_p53_p1[-1], 4)) + "\n" )
+        file.write("NDMm" + "\t" + str(round(S_NDMm_p1[-1], 4)) + "\t" + str(round(Stot_NDMm_p1[-1], 4)) + "\n" )
+        file.write("NDMst" + "\t" + str(round(S_NDMst_p1[-1], 4)) + "\t" + str(round(Stot_NDMst_p1[-1], 4)) + "\n" )
+        file.write("PTEN" + "\t" + str(round(S_PTEN_p1[-1], 4)) + "\t" + str(round(Stot_PTEN_p1[-1], 4)) + "\n" )
 
 Global_analysis()
 

@@ -1,0 +1,5 @@
+Bia³ko	œrednia wartoœæ S1	œrednia wartoœæ S1 total
+p53	0.2205	0.2794
+NDMm	16.5147	-2833.1648
+NDMst	0.7272	-115.3418
+PTEN	-0.439	0.0484
