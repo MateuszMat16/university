@@ -530,7 +530,7 @@ def Global_analysis(p53=1, NDMm=1, NDMst=1, PTEN=1, hop=10, time=172800):
 
     plt.plot(time, S_NDMm_p1, label="S1", color="#cc6699")
     plt.plot(time, Stot_NDMm_p1, label="Stot1", color="#62b863")
-    plt.ylabel("wrażliwość S1 oraz Stot dla NDMst")
+    plt.ylabel("wrażliwość S1 oraz Stot dla NDMm")
     plt.xlabel("Time [s]")
     plt.legend(loc="upper left")
     plt.savefig("Sensitivity_NDMm.png")
