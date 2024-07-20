@@ -48,21 +48,19 @@ class GameButton(Button):
         self.coor2 = coor2
         self.value = value
 
-    
-    def process(self):
-      super().process()
-      mousePos = pg.mouse.get_pos()
-      if pg.mouse.get_pressed(num_buttons=3)[0] and self.buttonRect.collidepoint(mousePos):
-        print("efsffsdsdf")
-        self.setButtonColor("#0000ff")
-        self.buttonSurface.fill(self.buttonColor)
-        self.value = True
-        print(self.value)
-    
+        self.gameButtonColors = {
+            "default": self.buttonColor,
+            "pressed": "#0000ff"
+        }
+
 
     def setButtonColor(self, newColor):
         self.buttonColor = newColor
     
+
+    def getButtonColor(self):
+        return self.buttonColor
+
 
     def getCoor1(self):
         return self.coor1
@@ -71,12 +69,47 @@ class GameButton(Button):
     def getCoor2(self):
         return self.coor2
     
+    def getValue(self):
+        return self.value
+    
+  
+
+
+    def setValue(self, newValue):
+        self.value = newValue
+        if newValue == False:
+            self.setButtonColor(self.gameButtonColors["default"])
+            self.buttonSurface.fill(self.buttonColor)
+         
+        else:
+            print("eesfsf")
+            self.setButtonColor(self.gameButtonColors["pressed"])
+            self.buttonSurface.fill(self.buttonColor)
+
+    def process(self):
+      super().process()
+      mousePos = pg.mouse.get_pos()
+      if pg.mouse.get_pressed(num_buttons=3)[0] and self.buttonRect.collidepoint(mousePos):
+        
+        if (self.buttonColor == self.gameButtonColors["default"]):  
+            self.setButtonColor(self.gameButtonColors["pressed"])
+            self.buttonSurface.fill(self.buttonColor)
+            self.value = not self.value
+            print(self.value)
+
+        else:
+            self.setButtonColor(self.gameButtonColors["default"])
+            self.buttonSurface.fill(self.buttonColor)
+            self.value = not self.value
+            print(self.value)
+        
 
 
 
 
 Button(20, 20, 120, 60, "My Button")
-GameButton(200, 200, 140, 50, "Some")
+x = GameButton(200, 200, 140, 50, "Some")
+x.setValue(True)
 
 # Game loop.
 while True:
