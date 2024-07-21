@@ -1,17 +1,126 @@
 import sys
 import pygame as pg
-
+import time
+import numpy as np
 pg.init()
 
-width, height = 850, 700
+width, height = 1000, 920
 fps = 10
 fpsClock = pg.time.Clock()
 screen = pg.display.set_mode((width, height))
 font = pg.font.SysFont('Arial', 20)
 objects = []
 
+# backend game logic
+game_playground = np.zeros([52, 52])
+
+# return the coordinates of neighbour cells 
+def get_neighbourhood_coordinates(x, y, x_max, y_max):
+    coors = np.array([999, 999])
+    x_coor = np.array([x - 1, x, x + 1])
+    y_coor = np.array([y - 1, y, y + 1])
+
+    for x_pos in x_coor:
+        for y_pos in y_coor:
+
+            if x == x_pos and y_pos == y:
+                continue
+            if x_pos < 0 or y_pos < 0:
+                continue
+            if x_pos > x_max or y_pos > y_max:
+                continue
+
+            coors = np.vstack([coors, [x_pos, y_pos]])
+    coors = np.delete(coors, 0, 0)
+    return coors
 
 
+def cnc_cell_status(x, y, net):
+    x_max = np.shape(net)[0]
+    y_max = np.shape(net)[1]
+    neighbourhood = get_neighbourhood_coordinates(x, y, x_max, y_max)
+    result = net[x, y]
+    counter = 0
+    for neigh in neighbourhood:
+    
+        if counter > 3:
+            break
+        # counter = counter + net[neigh[0], neigh[1]]
+        if net[neigh[0], neigh[1]] == 1:
+
+            counter += 1
+
+    if net[x, y] == 1:
+        
+        if counter < 2:
+            result = 0
+        elif counter in (2, 3):
+            result = 1
+        elif counter > 3:
+            result = 0
+    
+    elif net[x, y] == 0 and counter == 3:
+        result = 1
+    
+    return result
+
+
+def new_period(net, max_x, max_y):
+
+    new_net = np.copy(net)
+    for x in range (0 ,max_x -1):
+        for y in range(0, max_y -1):
+            new_net[x, y] = cnc_cell_status(x, y, net)
+    
+    new_net = checkBorder(new_net, max_x - 1, max_y- 1)
+    return new_net
+
+
+# warunek brzegowy
+def checkBorder(net, max_x, max_y):
+    new_net = np.copy(net)
+    for i in range(max_x):
+        for j in range(max_y):
+
+            if new_net[i, j] == 1:
+                
+                if i == 0 and j == 0:
+                    new_net[i, j] = 0
+                    new_net[max_x - 1, max_y - 1] = 1
+                    print("Found", 1)
+               
+                elif i == max_x and j == max_y:
+                    new_net[i, j] = 0
+                    new_net[1, 1] = 1
+                    print("Found", 2)
+
+                elif i == 0:
+                    new_net[i, j] = 0
+                    new_net[max_x - 1, j] = 1
+                    print("Found", 3)
+
+                elif i == max_x:
+                    new_net[i, j] = 0
+                    new_net[1, j] = 1
+                    print("Found", 3)
+
+                elif j == 0:
+                    new_net[i, j] = 0
+                    new_net[i, max_y - 1] = 1
+                    print("Found", 4)
+
+                elif j == max_y:
+                    new_net[i, j] = 0
+                    new_net[i, 1] = 1
+                    print("Found", 5)
+
+    return new_net
+
+
+
+
+# !!!!!!!!!!!!!!
+# fronend and classes
 class Button():
 
     def __init__(self, x, y, width, height, 
@@ -82,7 +191,6 @@ class GameButton(Button):
             self.buttonSurface.fill(self.buttonColor)
          
         else:
-            print("eesfsf")
             self.setButtonColor(self.gameButtonColors["pressed"])
             self.buttonSurface.fill(self.buttonColor)
 
@@ -95,21 +203,91 @@ class GameButton(Button):
             self.setButtonColor(self.gameButtonColors["pressed"])
             self.buttonSurface.fill(self.buttonColor)
             self.value = not self.value
-            print(self.value)
+
 
         else:
             self.setButtonColor(self.gameButtonColors["default"])
             self.buttonSurface.fill(self.buttonColor)
             self.value = not self.value
-            print(self.value)
+
+        time.sleep(0.2)
         
+class StartButton(Button):
+
+    def __init__(self, x, y, width, height, buttonText="Button",
+                  buttonColor="#ffffff", gameStarted=False):
+        super().__init__(x, y, width, height, buttonText, buttonColor)
+        self.gameStarted = gameStarted
+
+    def setButtonColor(self, newColor):
+        self.buttonColor = newColor
+
+    def process(self):
+        super().process()
+        if self.gameStarted:
+            
+            self.processGame()
+         
+
+        mousePos = pg.mouse.get_pos()
+        if pg.mouse.get_pressed(num_buttons=3)[0] and self.buttonRect.collidepoint(mousePos):
+            self.startGame()
+            self.setButtonColor("#0000ff")
+            self.buttonSurface.fill(self.buttonColor)
+            print("Game started!")
+            time.sleep(0.2)
+
+    def startGame(self):
+        self.gameStarted = True
+
+    def processGame(self):
+        self.readGameStatus()
+        self.changeGameStatus()
+        time.sleep(0.2)
+
+           
+        
+    def readGameStatus(self):
+        for row in gameButtonArray:
+            for button in row:
+                tmp = button.getValue()
+                if tmp:
+                    game_playground[button.getCoor1() + 1, button.getCoor2() + 1] = 1
+
+                else:
+                    game_playground[button.getCoor1() + 1, button.getCoor2() + 1] = 0
 
 
 
+    def changeGameStatus(self):
+        new_net = new_period(game_playground, 52, 52)
+        
+        for i in range(1, 51):
+                for j in range(1, 51):
+                    if new_net[i, j] == 1:
+                        gameButtonArray[i - 1][j - 1].setValue(True)
+                        print()
+                    else:
+                        gameButtonArray[i - 1][j - 1].setValue(False)
 
-Button(20, 20, 120, 60, "My Button")
-x = GameButton(200, 200, 140, 50, "Some")
-x.setValue(True)
+
+StartButton(20, 20, 120, 60, "Start")
+# x = GameButton(200, 200, 140, 50, "Some")
+# x.setValue(True)
+
+# creating array of gamebuttoms
+gameButtonArray = []
+# comlumns
+for i in range(50):
+    gameButtomRow = []
+    # rows
+    for j in range(50):
+        tmp = GameButton(100 + 16 * i, 100 + 16 * j, 15, 15, "", "#ffffff", i, j)
+        gameButtomRow.append(tmp)
+    
+    gameButtonArray.append(gameButtomRow)
+
+
 
 # Game loop.
 while True:
