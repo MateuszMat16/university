@@ -4,6 +4,7 @@ import time
 import numpy as np
 pg.init()
 
+# utworzenie podstawowych zmiennych i inicjalizacji wartości związanych z grą
 width, height = 1000, 920
 fps = 10
 fpsClock = pg.time.Clock()
@@ -11,10 +12,10 @@ screen = pg.display.set_mode((width, height))
 font = pg.font.SysFont('Arial', 20)
 objects = []
 
-# backend game logic
+# utworzenie matrycy służącej do symulacji poszczególnych epok
 game_playground = np.zeros([52, 52])
 
-# return the coordinates of neighbour cells 
+# funkcja zwracająca koordynaty sąsiednich komórek
 def get_neighbourhood_coordinates(x, y, x_max, y_max):
     coors = np.array([999, 999])
     x_coor = np.array([x - 1, x, x + 1])
@@ -34,13 +35,17 @@ def get_neighbourhood_coordinates(x, y, x_max, y_max):
     coors = np.delete(coors, 0, 0)
     return coors
 
-
+# funkcja określająca stan komórki po przejściu w następną epokę
 def cnc_cell_status(x, y, net):
+
+    # inicjalizacja zmiennych
     x_max = np.shape(net)[0]
     y_max = np.shape(net)[1]
     neighbourhood = get_neighbourhood_coordinates(x, y, x_max -1, y_max- 1)
     result = net[x, y]
     counter = 0
+
+    # sprawdzanie ilości żywych komórek w sąsiedzctwie
     for neigh in neighbourhood:
     
         if counter > 3:
@@ -50,6 +55,7 @@ def cnc_cell_status(x, y, net):
 
             counter += 1
 
+    # warunki dla już żywej komórki
     if net[x, y] == 1:
         
         if counter < 2:
@@ -59,12 +65,13 @@ def cnc_cell_status(x, y, net):
         elif counter > 3:
             result = 0
     
+    # warunek dla nieżywej komórki
     elif net[x, y] == 0 and counter == 3:
         result = 1
     
     return result
 
-
+# funkcja określająca stan układu po przejściu do nowej epoki
 def new_period(net, max_x, max_y):
 
     new_net = np.copy(net)
@@ -80,7 +87,7 @@ def new_period(net, max_x, max_y):
     return new_net
 
 
-# warunek brzegowy
+# warunek brzegowy periodyczny
 def checkBorder(net, max_x, max_y):
     new_net = np.copy(net)
     for i in range(0, max_x):
@@ -123,10 +130,13 @@ def checkBorder(net, max_x, max_y):
 
 
 
-# !!!!!!!!!!!!!!
-# fronend and classes
+# druga część
+
+# klasa przycisku z podstawowymi wartościami
+# na jej podstawie będą tworzone klasy przycisków funkcyjnych
 class Button():
 
+    # inicjalizowanie wartości w konstruktorze
     def __init__(self, x, y, width, height, 
                  buttonText = "Button", buttonColor="#ffffff"):
         print("Creating new buttom")
@@ -140,8 +150,11 @@ class Button():
         self.buttonRect = pg.Rect(self.x, self.y, self.witdth, self.height)
         self.buttonSurf = font.render(self.buttonText, True, (20, 20, 20))
         self.buttonSurface.fill(self.buttonColor)
+        # dodanie obiektu do listy obiektów do iteracji
         objects.append(self)
-       
+
+    
+    # funkcja wykonywana w każdej iteracji podczas trwania programu
     def process(self):
         #self.buttonSurface.fill("#ffffff")
         self.buttonSurface.blit(self.buttonSurf, [
@@ -151,12 +164,15 @@ class Button():
 
         screen.blit(self.buttonSurface, self.buttonRect)
        
-        
+
+# klasa przycisku - komórki
+# używana do symulacji komórki na planszy
 class GameButton(Button):
     
     def __init__(self, x, y, width, height, buttonText="Button", 
                  buttonColor="#ffffff", coor1 = 0, coor2 = 0, value=False):
         super().__init__(x, y, width, height, buttonText, buttonColor)
+        # dodatkowo dodane koordynaty związane z siatką
         self.coor1 = coor1
         self.coor2 = coor2
         self.value = value
@@ -187,7 +203,7 @@ class GameButton(Button):
     
   
 
-
+    # metoda zmiany wartości
     def setValue(self, newValue):
         self.value = newValue
         if newValue == False:
@@ -198,6 +214,7 @@ class GameButton(Button):
             self.setButtonColor(self.gameButtonColors["pressed"])
             self.buttonSurface.fill(self.buttonColor)
 
+    # metoda iteracyjna
     def process(self):
       super().process()
       mousePos = pg.mouse.get_pos()
@@ -213,14 +230,16 @@ class GameButton(Button):
             self.setButtonColor(self.gameButtonColors["default"])
             self.buttonSurface.fill(self.buttonColor)
             self.value = not self.value
-
-        time.sleep(0.2)
         
+        time.sleep(0.2)
+
+# klasa przycisku zaczynającego symulację  
 class StartButton(Button):
 
     def __init__(self, x, y, width, height, buttonText="Button",
                   buttonColor="#ffffff", gameStarted=False):
         super().__init__(x, y, width, height, buttonText, buttonColor)
+        # zmienna określająca, czy gram ma się rozpocząć
         self.gameStarted = gameStarted
 
     def setButtonColor(self, newColor):
@@ -228,8 +247,9 @@ class StartButton(Button):
 
     def process(self):
         super().process()
+        # iteracyjne sprawdzanie, czy gra się nie rozpoczęła
         if self.gameStarted:
-            
+            # rozpoczynanie gry
             self.processGame()
          
 
@@ -244,13 +264,14 @@ class StartButton(Button):
     def startGame(self):
         self.gameStarted = True
 
+    # metoda zmieniająca pola komórek w grze
     def processGame(self):
         self.readGameStatus()
         self.changeGameStatus()
         time.sleep(0.5)
 
            
-        
+    # metoda zczytująca wartości z aktualnego stanu 
     def readGameStatus(self):
         for row in gameButtonArray:
             for button in row:
@@ -262,7 +283,7 @@ class StartButton(Button):
                     game_playground[button.getCoor1() + 1, button.getCoor2() + 1] = 0
 
 
-
+    # metoda określająca i zmieniające epokę w grze
     def changeGameStatus(self):
         new_net = new_period(game_playground, 52, 52)
         myCounter.update()
@@ -275,6 +296,8 @@ class StartButton(Button):
                         gameButtonArray[i - 1][j - 1].setValue(False)
 
 
+# klasa licznika - przycisku
+# główne zdanie - liczenie epok
 class CounterButton(Button):
     def __init__(self, x, y, width, height, buttonText="Button", buttonColor="#ffffff", counter=0):
         super().__init__(x, y, width, height, buttonText, buttonColor)
@@ -283,24 +306,28 @@ class CounterButton(Button):
 
     def process(self):
         super().process()
-        
+    
+    # metoda wywoływana przy zmianie epoki
+    # zwiększa wartość licznika o 1
     def update(self):
         self.counter += 1
         self.buttonSurface = pg.Surface((self.witdth, self.height))
         self.buttonSurface.fill("#ffffff")
         self.buttonSurf = font.render(str(self.counter), True, (20, 20, 20))
 
+
+# inicjowanie przycisków nie należących do komórek
 StartButton(20, 20, 120, 60, "Start")
-# x = GameButton(200, 200, 140, 50, "Some")
-# x.setValue(True)
 myCounter = CounterButton(200, 20, 80, 60, "")
 
-# creating array of gamebuttoms
+# tworzenie macierzy dla przycisków komórek
 gameButtonArray = []
-# comlumns
+
+# tworzenie i dodawanie do macierzy przycisków komórek
+# kolumny
 for i in range(50):
     gameButtomRow = []
-    # rows
+    # rzędy
     for j in range(50):
         tmp = GameButton(100 + 16 * i, 100 + 16 * j, 15, 15, "", "#ffffff", i, j)
         gameButtomRow.append(tmp)
@@ -309,14 +336,17 @@ for i in range(50):
 
 
 
-# Game loop.
+# Pętla gry
 while True:
+    # wypełnianie tła kolorem
     screen.fill((20, 20, 20))
+    # zakończenie programu
     for event in pg.event.get():
         if event.type == pg.QUIT:
             pg.quit()
             sys.exit()
 
+    # iteracyjne procesowanie obiektów
     for object in objects:
         object.process()
 
