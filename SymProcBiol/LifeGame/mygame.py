@@ -38,7 +38,7 @@ def get_neighbourhood_coordinates(x, y, x_max, y_max):
 def cnc_cell_status(x, y, net):
     x_max = np.shape(net)[0]
     y_max = np.shape(net)[1]
-    neighbourhood = get_neighbourhood_coordinates(x, y, x_max, y_max)
+    neighbourhood = get_neighbourhood_coordinates(x, y, x_max -1, y_max- 1)
     result = net[x, y]
     counter = 0
     for neigh in neighbourhood:
@@ -68,51 +68,55 @@ def cnc_cell_status(x, y, net):
 def new_period(net, max_x, max_y):
 
     new_net = np.copy(net)
-    for x in range (0 ,max_x -1):
-        for y in range(0, max_y -1):
+    for x in range (0 ,max_x):
+
+        for y in range(0, max_y):
             new_net[x, y] = cnc_cell_status(x, y, net)
+                
+            if cnc_cell_status(x, y, net) == 1:
+                print("coordinates: ", x, y)
     
-    new_net = checkBorder(new_net, max_x - 1, max_y- 1)
+    new_net = checkBorder(new_net, max_x, max_y)
     return new_net
 
 
 # warunek brzegowy
 def checkBorder(net, max_x, max_y):
     new_net = np.copy(net)
-    for i in range(max_x):
-        for j in range(max_y):
+    for i in range(0, max_x):
+        for j in range(0, max_y):
 
             if new_net[i, j] == 1:
                 
                 if i == 0 and j == 0:
                     new_net[i, j] = 0
-                    new_net[max_x - 1, max_y - 1] = 1
-                    print("Found", 1)
+                    new_net[max_x - 2, max_y - 2] = 1
+                    print("Found 1")
                
-                elif i == max_x and j == max_y:
+                elif i == max_x - 1 and j == max_y - 1:
                     new_net[i, j] = 0
                     new_net[1, 1] = 1
-                    print("Found", 2)
+                    print("Found 2")
 
                 elif i == 0:
                     new_net[i, j] = 0
-                    new_net[max_x - 1, j] = 1
-                    print("Found", 3)
+                    new_net[max_x - 2, j] = 1
+                    print("Found 3")
 
-                elif i == max_x:
+                elif i == max_x - 1:
                     new_net[i, j] = 0
                     new_net[1, j] = 1
-                    print("Found", 3)
+                    print("Found 4")
 
                 elif j == 0:
                     new_net[i, j] = 0
-                    new_net[i, max_y - 1] = 1
-                    print("Found", 4)
+                    new_net[i, max_y - 2] = 1
+                    print("Found 5")
 
-                elif j == max_y:
+                elif j == max_y - 1:
                     new_net[i, j] = 0
                     new_net[i, 1] = 1
-                    print("Found", 5)
+                    print("Found 6")
 
     return new_net
 
@@ -243,7 +247,7 @@ class StartButton(Button):
     def processGame(self):
         self.readGameStatus()
         self.changeGameStatus()
-        time.sleep(0.2)
+        time.sleep(0.5)
 
            
         
@@ -266,7 +270,7 @@ class StartButton(Button):
                 for j in range(1, 51):
                     if new_net[i, j] == 1:
                         gameButtonArray[i - 1][j - 1].setValue(True)
-                        print()
+                        
                     else:
                         gameButtonArray[i - 1][j - 1].setValue(False)
 
