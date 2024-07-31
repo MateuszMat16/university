@@ -265,7 +265,7 @@ class StartButton(Button):
 
     def changeGameStatus(self):
         new_net = new_period(game_playground, 52, 52)
-        
+        myCounter.update()
         for i in range(1, 51):
                 for j in range(1, 51):
                     if new_net[i, j] == 1:
@@ -275,9 +275,25 @@ class StartButton(Button):
                         gameButtonArray[i - 1][j - 1].setValue(False)
 
 
+class CounterButton(Button):
+    def __init__(self, x, y, width, height, buttonText="Button", buttonColor="#ffffff", counter=0):
+        super().__init__(x, y, width, height, buttonText, buttonColor)
+        self.counter = counter
+    
+
+    def process(self):
+        super().process()
+        
+    def update(self):
+        self.counter += 1
+        self.buttonSurface = pg.Surface((self.witdth, self.height))
+        self.buttonSurface.fill("#ffffff")
+        self.buttonSurf = font.render(str(self.counter), True, (20, 20, 20))
+
 StartButton(20, 20, 120, 60, "Start")
 # x = GameButton(200, 200, 140, 50, "Some")
 # x.setValue(True)
+myCounter = CounterButton(200, 20, 80, 60, "")
 
 # creating array of gamebuttoms
 gameButtonArray = []
